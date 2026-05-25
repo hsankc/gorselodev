@@ -1,0 +1,25 @@
+# Visual Studio / .NET
+.vs/
+bin/
+obj/
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build and publish output
+publish/
+*.nupkg
+
+# Local runtime data
+**/App_Data/clinic-data.json
+**/App_Data/supabase-settings.json
+**/App_Data/Radiographs/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
