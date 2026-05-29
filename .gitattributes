@@ -1,0 +1,5 @@
+*.cs linguist-language=C#
+*.sln linguist-generated=true
+*.csproj linguist-generated=true
+*.sql linguist-documentation=true
+*.md linguist-documentation=true

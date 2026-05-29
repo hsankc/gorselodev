@@ -1,4 +1,4 @@
-using DisKlinigiYonetimSistemi.Controls;
+﻿using DisKlinigiYonetimSistemi.Controls;
 using DisKlinigiYonetimSistemi.Data;
 using DisKlinigiYonetimSistemi.Models;
 
@@ -15,7 +15,7 @@ public sealed class SupabaseSettingsForm : Form
     public SupabaseSettingsForm(ClinicDataStore store)
     {
         _store = store;
-        Text = "Supabase Ayarlari";
+        Text = "Supabase Ayarları";
         Size = new Size(680, 640);
         MinimumSize = new Size(620, 640);
         StartPosition = FormStartPosition.CenterParent;
@@ -46,7 +46,7 @@ public sealed class SupabaseSettingsForm : Form
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         Controls.Add(root);
 
-        root.Controls.Add(ModernUi.Label("Supabase Baglantisi", ModernUi.TitleFont), 0, 0);
+        root.Controls.Add(ModernUi.Label("Supabase Bağlantısı", ModernUi.TitleFont), 0, 0);
         root.Controls.Add(Field("Project URL", _urlBox), 0, 1);
         root.Controls.Add(Field("API Key", _apiKeyBox), 0, 2);
 
@@ -57,11 +57,11 @@ public sealed class SupabaseSettingsForm : Form
 
         root.Controls.Add(ButtonRow(
             ActionButton("Kaydet", ModernUi.Primary, SaveSettingsAsync),
-            ActionButton("Baglantiyi Test Et", ModernUi.Accent, TestConnectionAsync)), 0, 4);
+            ActionButton("Bağlantıyı Test Et", ModernUi.Accent, TestConnectionAsync)), 0, 4);
 
         root.Controls.Add(ButtonRow(
-            ActionButton("Buluta Gonder", ModernUi.Primary, PushLocalAsync),
-            ActionButton("Buluttan Cek", Color.FromArgb(93, 101, 214), PullRemoteAsync)), 0, 5);
+            ActionButton("Buluta Gönder", ModernUi.Primary, PushLocalAsync),
+            ActionButton("Buluttan Çek", Color.FromArgb(93, 101, 214), PullRemoteAsync)), 0, 5);
 
         _statusLabel.Dock = DockStyle.Fill;
         _statusLabel.AutoSize = false;
@@ -117,7 +117,7 @@ public sealed class SupabaseSettingsForm : Form
             await _store.SaveSupabaseSettingsAsync(settings);
         }
 
-        SetStatus(ok ? "Baglanti basarili. Ayarlar kaydedildi." : "Baglanti basarisiz. URL/key veya tablo politikasini kontrol et.", ok ? ModernUi.Accent : ModernUi.Danger);
+        SetStatus(ok ? "Bağlantı başarılı. Ayarlar kaydedildi." : "Bağlantı başarısız. URL/key veya tablo politikasını kontrol et.", ok ? ModernUi.Accent : ModernUi.Danger);
     }
 
     private async Task PushLocalAsync()
@@ -131,7 +131,7 @@ public sealed class SupabaseSettingsForm : Form
     {
         await _store.SaveSupabaseSettingsAsync(ReadSettings());
         var snapshot = await _store.PullFromSupabaseAsync();
-        SetStatus(snapshot is null ? _store.LastSyncError ?? "Supabase'den veri cekilemedi." : "Supabase verisi indirildi ve lokal cache guncellendi.", snapshot is null ? ModernUi.Warning : ModernUi.Accent);
+        SetStatus(snapshot is null ? _store.LastSyncError ?? "Supabase'den veri cekilemedi." : "Supabase verisi indirildi ve lokal cache güncellendi.", snapshot is null ? ModernUi.Warning : ModernUi.Accent);
     }
 
     private SupabaseSettings ReadSettings() => new()
@@ -196,7 +196,7 @@ public sealed class SupabaseSettingsForm : Form
         try
         {
             SetBusy(true);
-            SetStatus("Islem yapiliyor...", ModernUi.Muted);
+            SetStatus("İşlem yapiliyor...", ModernUi.Muted);
             await action();
         }
         catch (Exception ex)

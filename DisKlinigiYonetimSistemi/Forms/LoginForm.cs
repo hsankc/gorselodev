@@ -1,4 +1,4 @@
-using System.Drawing.Drawing2D;
+﻿using System.Drawing.Drawing2D;
 using System.ComponentModel;
 using DisKlinigiYonetimSistemi.Controls;
 using DisKlinigiYonetimSistemi.Data;

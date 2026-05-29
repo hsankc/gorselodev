@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace DisKlinigiYonetimSistemi.Models;
 
@@ -162,7 +162,7 @@ public sealed class SupabaseSettings
 
 public sealed class DataSnapshot
 {
-    public int SeedVersion { get; set; } = 4;
+    public int SeedVersion { get; set; } = 7;
     public List<UserAccount> Users { get; set; } = [];
     public List<Patient> Patients { get; set; } = [];
     public List<MedicationTemplate> Medications { get; set; } = [];

@@ -1,10 +1,10 @@
-# CCETY Dis Klinigi Yonetim Sistemi
+﻿# CCETY Diş Kliniği Yönetim Sistemi
 
-CCETY Dis Klinigi Yonetim Sistemi, C# Windows Forms ile gelistirilmis rol bazli bir klinik otomasyon projesidir. Uygulama; admin, doktor, sekreter ve hasta panelleri uzerinden hasta dosyalarini, randevu sureclerini, receteleri, rontgen kayitlarini, tedavi planlarini ve sistem loglarini tek merkezden yonetir.
+CCETY Diş Kliniği Yönetim Sistemi, C# Windows Forms ile gelistirilmis rol bazli bir klinik otomasyon projesidir. Uygulama; admin, doktor, sekreter ve hasta panelleri uzerinden hasta dosyalarini, randevu sureclerini, reçeteleri, rontgen kayitlarini, tedavi planlarini ve sistem loglarini tek merkezden yonetir.
 
 ## Proje Amaci
 
-Bu proje, bir dis kliniginde farkli kullanici rollerinin ihtiyac duydugu temel operasyonlari masaustu uygulamasi uzerinden modellemek icin hazirlanmistir. Hasta randevu talebi olusturabilir, doktor ve sekreterler randevu akislarini yonetebilir, doktorlar klinik kayitlari guncelleyebilir, admin ise sistem genelini ve loglari takip edebilir.
+Bu proje, bir dis kliniginde farkli kullanici rollerinin ihtiyac duydugu temel operasyonlari masaustu uygulamasi uzerinden modellemek icin hazirlanmistir. Hasta randevu talebi oluşturabilir, doktor ve sekreterler randevu akislarini yonetebilir, doktorlar klinik kayitlari güncelleyebilir, admin ise sistem genelini ve loglari takip edebilir.
 
 ## Temel Ozellikler
 
@@ -13,7 +13,7 @@ Bu proje, bir dis kliniginde farkli kullanici rollerinin ihtiyac duydugu temel o
 - Hasta dosyasi goruntuleme ve hasta bilgisi duzenleme
 - Randevu talebi, onaylama, reddetme ve durum takibi
 - Doktor ve sekreter tarafindan randevu akis yonetimi
-- Recete olusturma ve recete gecmisi takibi
+- Recete oluşturma ve reçete geçmişi takibi
 - Rontgen kayitlari ve mock rontgen arsivi
 - Tedavi planlari ve klinik notlar
 - Sistem loglari ve kullanici hareketleri
@@ -24,11 +24,11 @@ Bu proje, bir dis kliniginde farkli kullanici rollerinin ihtiyac duydugu temel o
 
 ### Admin
 
-Admin kullanicisi sistemin genel kontrol paneline erisir. Hasta merkezi, randevu akisi, ekip profilleri, sistem loglari ve Supabase ayarlari admin panelinden yonetilebilir.
+Admin kullanicisi sistemin genel kontrol paneline erisir. Hasta merkezi, randevu akışı, ekip profilleri, sistem loglari ve Supabase ayarlari admin panelinden yonetilebilir.
 
 ### Doktor
 
-Doktor kullanicisi kendisine ait hasta dosyalarini, randevulari, receteleri, rontgenleri ve tedavi sureclerini takip eder. Klinik notlar ve tedavi kayitlari doktor akisinda olusturulur.
+Doktor kullanicisi kendisine ait hasta dosyalarini, randevulari, reçeteleri, rontgenleri ve tedavi sureclerini takip eder. Klinik notlar ve tedavi kayitlari doktor akışında oluşturulur.
 
 ### Sekreter
 
@@ -36,7 +36,7 @@ Sekreter kullanicisi randevu akislarini takip eder, hasta taleplerini yonetir ve
 
 ### Hasta
 
-Hasta kullanicisi kendi klinik dosyasini, yaklasan randevularini, recetelerini, rontgenlerini ve tedavi bilgilerini gorur. Hasta kendi bilgilerini duzenleyebilir ve randevu talebi olusturabilir.
+Hasta kullanicisi kendi klinik dosyasini, yaklasan randevularini, reçetelerini, rontgenlerini ve tedavi bilgilerini gorur. Hasta kendi bilgilerini duzenleyebilir ve randevu talebi oluşturabilir.
 
 ## Demo Giris Bilgileri
 
@@ -59,14 +59,14 @@ Supabase entegrasyonu tek bir JSONB tablo uzerinden calisir. Uygulamanin tum kli
 
 Supabase kurulumu icin:
 
-1. Supabase'de yeni bir proje olusturun.
+1. Supabase'de yeni bir proje oluşturun.
 2. SQL Editor ekraninda `DisKlinigiYonetimSistemi/supabase-schema.sql` dosyasindaki SQL kodunu calistirin.
 3. Uygulamaya `admin` kullanicisiyle girin.
 4. Sol menuden `Supabase Ayarlari` ekranini acin.
 5. Supabase Project URL ve anon public key bilgisini girin.
-6. `Baglantiyi Test Et` ile kontrol edin.
-7. Lokal demo verisini buluta aktarmak icin `Buluta Gonder` butonunu kullanin.
-8. Baska bilgisayarda ayni ayarlari girip `Buluttan Cek` ile veriyi indirebilirsiniz.
+6. `Bağlantıyı Test Et` ile kontrol edin.
+7. Lokal demo verisini buluta aktarmak icin `Buluta Gönder` butonunu kullanin.
+8. Başka bilgisayarda aynı ayarlari girip `Buluttan Çek` ile veriyi indirebilirsiniz.
 
 > Not: Bu proje okul/demo senaryosu icin anon key ve acik RLS politikalariyla hazirlanmistir. Gercek bir canli sistemde Supabase Auth, kullanici bazli RLS politikalar ve service role key'i istemci uygulamaya koymayan guvenli bir backend tercih edilmelidir.
 

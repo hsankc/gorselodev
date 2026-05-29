@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using DisKlinigiYonetimSistemi.Controls;
 using DisKlinigiYonetimSistemi.Data;
 using DisKlinigiYonetimSistemi.Models;
@@ -24,10 +24,10 @@ public sealed class PatientEditorForm : Form
     private readonly TextBox _smoking = ModernUi.TextBox("Sigara durumu");
     private readonly TextBox _emergencyName = ModernUi.TextBox("Acil kisi");
     private readonly TextBox _emergencyPhone = ModernUi.TextBox("Acil telefon");
-    private readonly TextBox _dentalHistory = ModernUi.TextBox("Dis gecmisi");
+    private readonly TextBox _dentalHistory = ModernUi.TextBox("Diş geçmişi");
     private readonly TextBox _riskLevel = ModernUi.TextBox("Risk seviyesi");
-    private readonly TextBox _userName = ModernUi.TextBox("Kullanici adi");
-    private readonly TextBox _password = ModernUi.TextBox("Sifre", true);
+    private readonly TextBox _userName = ModernUi.TextBox("Kullanıcı adı");
+    private readonly TextBox _password = ModernUi.TextBox("Şifre", true);
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public Patient? Patient { get; private set; }
@@ -80,20 +80,20 @@ public sealed class PatientEditorForm : Form
         AddField(panel, "Boy (cm)", _height);
         AddField(panel, "Kilo (kg)", _weight);
         AddField(panel, "Alerji Notlari", _allergy);
-        AddField(panel, "Kronik Hastaliklar", _chronic);
-        AddField(panel, "Kullandigi Ilaclar", _currentMedications);
+        AddField(panel, "Kronik Hastalıklar", _chronic);
+        AddField(panel, "Kullandığı İlaçlar", _currentMedications);
         AddField(panel, "Sigara", _smoking);
         AddField(panel, "Acil Kisi", _emergencyName);
         AddField(panel, "Acil Telefon", _emergencyPhone);
-        AddField(panel, "Dis Gecmisi", _dentalHistory);
+        AddField(panel, "Diş Geçmişi", _dentalHistory);
         AddField(panel, "Risk Seviyesi", _riskLevel);
 
         if (_withAccount)
         {
             _userName.Text = SuggestUserName(store);
             _password.Text = "123456";
-            AddField(panel, "Portal Kullanici Adi", _userName);
-            AddField(panel, "Portal Sifresi", _password);
+            AddField(panel, "Portal Kullanıcı Adı", _userName);
+            AddField(panel, "Portal Şifresi", _password);
         }
 
         var buttons = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 54, FlowDirection = FlowDirection.RightToLeft };
@@ -151,13 +151,13 @@ public sealed class PatientEditorForm : Form
 
         if (_withAccount && (string.IsNullOrWhiteSpace(_userName.Text) || string.IsNullOrWhiteSpace(_password.Text)))
         {
-            MessageBox.Show("Hasta portali icin kullanici adi ve sifre girin.", "Eksik Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("Hasta portalı icin kullanici adi ve sifre girin.", "Eksik Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
         if (_withAccount && store.Snapshot.Users.Any(user => user.UserName.Equals(_userName.Text.Trim(), StringComparison.OrdinalIgnoreCase)))
         {
-            MessageBox.Show("Bu kullanici adi zaten var.", "Kayit Uyarisi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("Bu kullanıcı adı zaten var.", "Kayıt Uyarisi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 

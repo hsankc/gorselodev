@@ -1,4 +1,4 @@
-using DisKlinigiYonetimSistemi.Controls;
+﻿using DisKlinigiYonetimSistemi.Controls;
 using DisKlinigiYonetimSistemi.Data;
 using DisKlinigiYonetimSistemi.Models;
 
@@ -81,15 +81,15 @@ public sealed class MainForm : Form
         };
         sidebar.Controls.Add(nav);
         AddNav(nav, "Ana Panel", ShowDashboard);
-        AddNav(nav, IsPatient ? "Klinik Dosyam" : IsDoctor ? "Hasta Dosyalari" : "Hasta Merkezi", ShowPatientFiles);
-        AddNav(nav, IsPatient ? "Randevu Al" : "Randevu Akisi", ShowAppointments);
-        AddNav(nav, IsPatient ? "Recetelerim" : "Akilli Recete", ShowPrescriptions);
-        AddNav(nav, IsPatient ? "Rontgenlerim" : "Rontgen Arsivi", ShowRadiographs);
-        AddNav(nav, IsPatient ? "Tedavilerim" : "Tedavi Sureci", ShowTreatments);
+        AddNav(nav, IsPatient ? "Klinik Dosyam" : IsDoctor ? "Hasta Dosyaları" : "Hasta Merkezi", ShowPatientFiles);
+        AddNav(nav, IsPatient ? "Randevu Al" : "Randevu Akışı", ShowAppointments);
+        AddNav(nav, IsPatient ? "Reçetelerim" : "Akıllı Reçete", ShowPrescriptions);
+        AddNav(nav, IsPatient ? "Röntgenlerim" : "Röntgen Arşivi", ShowRadiographs);
+        AddNav(nav, IsPatient ? "Tedavilerim" : "Tedavi Süreci", ShowTreatments);
         if (!IsPatient) AddNav(nav, "Ekip Profilleri", ShowStaff);
-        if (IsAdmin) AddNav(nav, "Sistem Loglari", ShowLogs);
-        if (IsAdmin) AddNav(nav, "Supabase Ayarlari", ShowSupabaseSettings);
-        AddNav(nav, "Cikis Yap", Close);
+        if (IsAdmin) AddNav(nav, "Sistem Logları", ShowLogs);
+        if (IsAdmin) AddNav(nav, "Supabase Ayarları", ShowSupabaseSettings);
+        AddNav(nav, "Çıkış Yap", Close);
     }
 
     private string RoleTitle() => _currentUser.Role switch
@@ -97,7 +97,7 @@ public sealed class MainForm : Form
         UserRole.Admin => "Admin ve denetim paneli",
         UserRole.Doktor => $"{_currentUser.Specialty} doktor paneli",
         UserRole.Sekreter => $"{_store.DoctorName(_currentUser.AssignedDoctorUserId ?? "")} sekreteri",
-        _ => "Hasta portali"
+        _ => "Hasta portalı"
     };
 
     private void AddNav(FlowLayoutPanel nav, string text, Action action)
@@ -120,7 +120,7 @@ public sealed class MainForm : Form
         button.FlatAppearance.MouseOverBackColor = Color.FromArgb(42, 56, 86);
         button.Click += (_, _) => 
         {
-            if (text != "Cikis Yap")
+            if (text != "Çıkış Yap")
             {
                 _content.SuspendDrawing();
                 action();
@@ -184,8 +184,8 @@ public sealed class MainForm : Form
         for (var i = 0; i < 4; i++) stats.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
         stats.Controls.Add(MetricCard(IsPatient ? "Randevum" : "Hasta", IsPatient ? appointments.Count.ToString() : VisiblePatients().Count().ToString(), "Gorunen kayit", ModernUi.Primary), 0, 0);
         stats.Controls.Add(MetricCard("Bekleyen", appointments.Count(a => a.Status == AppointmentStatus.TalepEdildi).ToString(), "Onay bekleyen talep", ModernUi.Warning), 1, 0);
-        stats.Controls.Add(MetricCard("Recete", VisiblePrescriptions().Count().ToString(), "Kayitli recete", Color.FromArgb(92, 107, 192)), 2, 0);
-        stats.Controls.Add(MetricCard(IsPatient ? "Tedavi" : "Log", IsPatient ? treatments.Count.ToString() : VisibleLogs().Count().ToString(), IsPatient ? "Tedavi kaydi" : "Islem kaydi", ModernUi.Accent), 3, 0);
+        stats.Controls.Add(MetricCard("Reçete", VisiblePrescriptions().Count().ToString(), "Kayıtlı reçete", Color.FromArgb(92, 107, 192)), 2, 0);
+        stats.Controls.Add(MetricCard(IsPatient ? "Tedavi" : "Log", IsPatient ? treatments.Count.ToString() : VisibleLogs().Count().ToString(), IsPatient ? "Tedavi kaydı" : "İşlem kaydı", ModernUi.Accent), 3, 0);
         body.Controls.Add(stats, 0, 0);
 
         var split = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2 };
@@ -195,16 +195,16 @@ public sealed class MainForm : Form
 
         split.Controls.Add(Section("Yaklasan Randevular", Flow(UpcomingAppointments(appointments).Take(6).Select(a => AppointmentCard(a, true)))), 0, 0);
         split.Controls.Add(IsPatient
-            ? Section("Klinik Ozeti", PatientDashboardSummary())
-            : Section(IsAdmin ? "Son Loglar" : "Kisa Klinik Akisi", Flow(VisibleLogs().Take(8).Select(LogCard))), 1, 0);
+            ? Section("Klinik Özeti", PatientDashboardSummary())
+            : Section(IsAdmin ? "Son Loglar" : "Kısa Klinik Akışı", Flow(VisibleLogs().Take(8).Select(LogCard))), 1, 0);
     }
 
     private string DashboardSubtitle() => _currentUser.Role switch
     {
-        UserRole.Hasta => "Randevulariniz, receteleriniz ve klinik dosyaniz tek ekranda.",
-        UserRole.Doktor => "Kendi hastalariniz, receteleriniz ve randevu akisinizi yonetin.",
+        UserRole.Hasta => "Randevulariniz, reçeteleriniz ve klinik dosyaniz tek ekranda.",
+        UserRole.Doktor => "Kendi hastalarınızı, reçetelerinizi ve randevu akışınızı yönetin.",
         UserRole.Sekreter => "Bagli doktorunuzun hasta ve randevu operasyonlarini takip edin.",
-        _ => "Klinigin tum operasyon, ekip ve log akisini denetleyin."
+        _ => "Klinigin tum operasyon, ekip ve log akışıni denetleyin."
     };
 
     private static IEnumerable<Appointment> UpcomingAppointments(IEnumerable<Appointment> appointments) =>
@@ -228,9 +228,9 @@ public sealed class MainForm : Form
         return Flow([
             InfoCard("Risk", string.IsNullOrWhiteSpace(patient.RiskLevel) ? "-" : patient.RiskLevel, ModernUi.Warning),
             InfoCard("Alerji", string.IsNullOrWhiteSpace(patient.AllergyNotes) ? "-" : patient.AllergyNotes, ModernUi.Danger),
-            InfoCard("Son Recete", latestPrescription is null ? "Kayit yok" : $"{latestPrescription.Topic} - {latestPrescription.Date:dd.MM.yyyy}", Color.FromArgb(92, 107, 192)),
-            InfoCard("Son Tedavi", latestTreatment is null ? "Kayit yok" : latestTreatment.ProcedureName, ModernUi.Accent),
-            InfoCard("Son Rontgen", latestRadiograph is null ? "Kayit yok" : $"{latestRadiograph.ToothRegion} - {latestRadiograph.Date:dd.MM.yyyy}", ModernUi.Primary)
+            InfoCard("Son Reçete", latestPrescription is null ? "Kayıt yok" : $"{latestPrescription.Topic} - {latestPrescription.Date:dd.MM.yyyy}", Color.FromArgb(92, 107, 192)),
+            InfoCard("Son Tedavi", latestTreatment is null ? "Kayıt yok" : latestTreatment.ProcedureName, ModernUi.Accent),
+            InfoCard("Son Röntgen", latestRadiograph is null ? "Kayıt yok" : $"{latestRadiograph.ToothRegion} - {latestRadiograph.Date:dd.MM.yyyy}", ModernUi.Primary)
         ]);
     }
 
@@ -259,14 +259,14 @@ public sealed class MainForm : Form
         }
 
         Text = $"ÇCETY Diş Kliniği - {_currentUser.FullName}";
-        await _store.AddLogAsync(_currentUser, "Bilgi Guncelleme", $"{updated.FullName} hasta bilgilerini guncelledi.", updated.Id);
+        await _store.AddLogAsync(_currentUser, "Bilgi Güncelleme", $"{updated.FullName} hasta bilgilerini güncelledi.", updated.Id);
         ShowPatientFiles();
     }
 
     private void ShowPatientFiles()
     {
         var patients = VisiblePatients().OrderBy(p => p.FullName).ToList();
-        var page = Page(IsPatient ? "Klinik Dosyam" : "Hasta Dosyalari", IsPatient ? "Tum saglik ve dis klinigi bilgileriniz." : "Hastanin uzerine gelerek veya tiklayarak dosya detaylari arasinda gezinin.");
+        var page = Page(IsPatient ? "Klinik Dosyam" : "Hasta Dosyaları", IsPatient ? "Tüm sağlık ve diş kliniği bilgileriniz." : "Hastanın üzerine gelerek veya tıklayarak dosya detayları arasında gezinin.");
 
         if (IsPatient)
         {
@@ -352,7 +352,7 @@ public sealed class MainForm : Form
         {
             ProfileLine("Acil Kisi", patient.EmergencyContactName, 18),
             ProfileLine("Acil Telefon", patient.EmergencyContactPhone),
-            ProfileLine("Kayit", patient.CreatedAt.ToString("dd.MM.yyyy"))
+            ProfileLine("Kayıt", patient.CreatedAt.ToString("dd.MM.yyyy"))
         };
         if (IsPatient)
         {
@@ -372,7 +372,7 @@ public sealed class MainForm : Form
                 {
                     var idx = _store.Snapshot.Patients.FindIndex(x => x.Id == patient.Id);
                     if (idx >= 0) _store.Snapshot.Patients[idx] = p;
-                    await _store.AddLogAsync(_currentUser, "Bilgi Guncelleme", $"{p.FullName} bilgileri guncellendi.", p.Id);
+                    await _store.AddLogAsync(_currentUser, "Bilgi Güncelleme", $"{p.FullName} bilgileri güncellendi.", p.Id);
                     ShowPatientFiles();
                 }
             };
@@ -402,15 +402,15 @@ public sealed class MainForm : Form
         var tabs = new TabControl { Dock = DockStyle.Fill, Font = ModernUi.BodyFont };
         tabs.TabPages.Add(Tab("Genel", Flow([
             InfoCard("Alerji", patient.AllergyNotes, ModernUi.Danger),
-            InfoCard("Kronik Hastalik", patient.ChronicDiseases, ModernUi.Warning),
-            InfoCard("Kullandigi Ilaclar", patient.CurrentMedications, Color.FromArgb(92, 107, 192)),
+            InfoCard("Kronik Hastalık", patient.ChronicDiseases, ModernUi.Warning),
+            InfoCard("Kullandığı İlaçlar", patient.CurrentMedications, Color.FromArgb(92, 107, 192)),
             InfoCard("Sigara", patient.SmokingStatus, ModernUi.Muted),
-            InfoCard("Dis Gecmisi", patient.DentalHistory, ModernUi.Primary),
+            InfoCard("Diş Geçmişi", patient.DentalHistory, ModernUi.Primary),
             InfoCard("Adres", patient.Address, ModernUi.Accent)
         ])));
         tabs.TabPages.Add(Tab("Randevular", Flow(VisibleAppointments().Where(a => a.PatientId == patient.Id).OrderBy(a => a.StartsAt).Select(a => AppointmentCard(a, true)))));
-        tabs.TabPages.Add(Tab("Receteler", Flow(VisiblePrescriptions().Where(p => p.PatientId == patient.Id).OrderByDescending(p => p.Date).Select(PrescriptionCard))));
-        tabs.TabPages.Add(Tab("Rontgenler", Flow(VisibleRadiographs().Where(r => r.PatientId == patient.Id).OrderByDescending(r => r.Date).Select(RadiographCard))));
+        tabs.TabPages.Add(Tab("Reçeteler", Flow(VisiblePrescriptions().Where(p => p.PatientId == patient.Id).OrderByDescending(p => p.Date).Select(PrescriptionCard))));
+        tabs.TabPages.Add(Tab("Röntgenler", Flow(VisibleRadiographs().Where(r => r.PatientId == patient.Id).OrderByDescending(r => r.Date).Select(RadiographCard))));
         tabs.TabPages.Add(Tab("Tedavi", Flow(VisibleTreatments().Where(t => t.PatientId == patient.Id).OrderByDescending(t => t.Date).Select(TreatmentCard))));
         if (!IsPatient)
         {
@@ -422,7 +422,7 @@ public sealed class MainForm : Form
 
     private void ShowAppointments()
     {
-        var page = Page(IsPatient ? "Randevu Al" : "Randevu Akisi", IsPatient ? "Yeni talep olusturun, onay durumunu takip edin." : "Bekleyen talepleri kartlardan yonetin.");
+        var page = Page(IsPatient ? "Randevu Al" : "Randevu Akışı", IsPatient ? "Yeni talep oluşturun, onay durumunu takip edin." : "Bekleyen talepleri kartlardan yönetin.");
         var body = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 2 };
         body.RowStyles.Add(new RowStyle(SizeType.Absolute, 58));
         body.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -437,14 +437,14 @@ public sealed class MainForm : Form
         var tabs = new TabControl { Dock = DockStyle.Fill, Font = ModernUi.BodyFont };
         var appointments = VisibleAppointments().ToList();
         tabs.TabPages.Add(Tab("Bekleyen", Flow(appointments.Where(a => a.Status == AppointmentStatus.TalepEdildi).OrderBy(a => a.StartsAt).Select(a => AppointmentCard(a, true)))));
-        tabs.TabPages.Add(Tab("Onayli", Flow(appointments.Where(a => a.Status == AppointmentStatus.Onaylandi).OrderBy(a => a.StartsAt).Select(a => AppointmentCard(a, true)))));
-        tabs.TabPages.Add(Tab("Gecmis", Flow(appointments.Where(a => a.Status is AppointmentStatus.Tamamlandi or AppointmentStatus.Geldi or AppointmentStatus.Iptal or AppointmentStatus.Reddedildi).OrderByDescending(a => a.StartsAt).Select(a => AppointmentCard(a, true)))));
+        tabs.TabPages.Add(Tab("Onaylı", Flow(appointments.Where(a => a.Status == AppointmentStatus.Onaylandi).OrderBy(a => a.StartsAt).Select(a => AppointmentCard(a, true)))));
+        tabs.TabPages.Add(Tab("Geçmiş", Flow(appointments.Where(a => a.Status is AppointmentStatus.Tamamlandi or AppointmentStatus.Geldi or AppointmentStatus.Iptal or AppointmentStatus.Reddedildi).OrderByDescending(a => a.StartsAt).Select(a => AppointmentCard(a, true)))));
         body.Controls.Add(tabs, 0, 1);
     }
 
     private void ShowPrescriptions()
     {
-        var page = Page(IsPatient ? "Recetelerim" : "Akilli Recete", IsPatient ? "Doktor tarafindan yazilan receteleriniz." : "Ilac katalogundan secim yapin, kullanim talimati otomatik gelsin.");
+        var page = Page(IsPatient ? "Reçetelerim" : "Akıllı Reçete", IsPatient ? "Doktor tarafından yazılan reçeteleriniz." : "İlaç kataloğundan seçim yapın, kullanım talimatı otomatik gelsin.");
         var body = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 2 };
         body.RowStyles.Add(new RowStyle(SizeType.Absolute, CanClinical ? 58 : 0));
         body.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -453,18 +453,18 @@ public sealed class MainForm : Form
         if (CanClinical)
         {
             var toolbar = new FlowLayoutPanel { Dock = DockStyle.Fill };
-            var add = PrimaryAction("Yeni Recete Yaz", 160);
+            var add = PrimaryAction("Yeni Reçete Yaz", 160);
             add.Click += (_, _) => AddPrescription();
             toolbar.Controls.Add(add);
             body.Controls.Add(toolbar, 0, 0);
         }
 
-        body.Controls.Add(Section("Recete Kartlari", Flow(VisiblePrescriptions().OrderByDescending(p => p.Date).Select(PrescriptionCard))), 0, 1);
+        body.Controls.Add(Section("Reçete Kartlari", Flow(VisiblePrescriptions().OrderByDescending(p => p.Date).Select(PrescriptionCard))), 0, 1);
     }
 
     private void ShowRadiographs()
     {
-        var page = Page(IsPatient ? "Rontgenlerim" : "Rontgen Arsivi", "Rontgenler gorsel onizleme ve klinik notlarla listelenir.");
+        var page = Page(IsPatient ? "Röntgenlerim" : "Röntgen Arşivi", "Röntgenler gorsel onizleme ve klinik notlarla listelenir.");
         var body = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 2 };
         body.RowStyles.Add(new RowStyle(SizeType.Absolute, CanClinical ? 58 : 0));
         body.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -473,17 +473,17 @@ public sealed class MainForm : Form
         if (CanClinical)
         {
             var toolbar = new FlowLayoutPanel { Dock = DockStyle.Fill };
-            var add = PrimaryAction("Rontgen Ekle", 140);
+            var add = PrimaryAction("Röntgen Ekle", 140);
             add.Click += (_, _) => AddRadiograph();
             toolbar.Controls.Add(add);
             body.Controls.Add(toolbar, 0, 0);
         }
-        body.Controls.Add(Section("Gorsel Arsiv", Flow(VisibleRadiographs().OrderByDescending(r => r.Date).Select(RadiographCard))), 0, 1);
+        body.Controls.Add(Section("Görsel Arşiv", Flow(VisibleRadiographs().OrderByDescending(r => r.Date).Select(RadiographCard))), 0, 1);
     }
 
     private void ShowTreatments()
     {
-        var page = Page(IsPatient ? "Tedavilerim" : "Tedavi Sureci", "Klinik tedavi notlari, dis numarasi ve durum bilgisi.");
+        var page = Page(IsPatient ? "Tedavilerim" : "Tedavi Süreci", "Klinik tedavi notları, diş numarası ve durum bilgisi.");
         var body = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 2 };
         body.RowStyles.Add(new RowStyle(SizeType.Absolute, CanClinical ? 58 : 0));
         body.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -497,7 +497,7 @@ public sealed class MainForm : Form
             toolbar.Controls.Add(add);
             body.Controls.Add(toolbar, 0, 0);
         }
-        body.Controls.Add(Section("Tedavi Kartlari", Flow(VisibleTreatments().OrderByDescending(t => t.Date).Select(TreatmentCard))), 0, 1);
+        body.Controls.Add(Section("Tedavi Kartları", Flow(VisibleTreatments().OrderByDescending(t => t.Date).Select(TreatmentCard))), 0, 1);
     }
 
     private void ShowStaff()
@@ -532,14 +532,14 @@ public sealed class MainForm : Form
         {
             flow.Controls.Add(DoctorCard(doctor));
         }
-        body.Controls.Add(Section("Doktor - Sekreter Eslesmeleri", flow), 0, 1);
+        body.Controls.Add(Section("Doktor - Sekreter Eşleşmeleri", flow), 0, 1);
         page.Controls.Add(body, 0, 1);
     }
 
     private void ShowLogs()
     {
-        var page = Page("Sistem Loglari", "Sistemde yapilan tum kritik hareketler.");
-        page.Controls.Add(Section("Denetim Akisi", Flow(VisibleLogs().Take(100).Select(LogCard))), 0, 1);
+        var page = Page("Sistem Logları", "Sistemde yapilan tum kritik hareketler.");
+        page.Controls.Add(Section("Denetim Akışı", Flow(VisibleLogs().Take(100).Select(LogCard))), 0, 1);
     }
 
     private IEnumerable<Patient> VisiblePatients()
@@ -613,7 +613,7 @@ public sealed class MainForm : Form
         }
 
         _store.Snapshot.Appointments.Add(item);
-        await _store.AddLogAsync(_currentUser, "Randevu Talebi", $"{_store.PatientName(item.PatientId)} icin randevu kaydi olusturuldu.", item.PatientId, item.DoctorUserId);
+        await _store.AddLogAsync(_currentUser, "Randevu Talebi", $"{_store.PatientName(item.PatientId)} icin randevu kaydı oluşturuldu.", item.PatientId, item.DoctorUserId);
         ShowAppointments();
     }
 
@@ -622,7 +622,7 @@ public sealed class MainForm : Form
         var item = EntityEditorForms.Prescription(_store, null, _currentUser);
         if (item is null) return;
         _store.Snapshot.Prescriptions.Add(item);
-        await _store.AddLogAsync(_currentUser, "Recete Yazildi", $"{_store.PatientName(item.PatientId)} icin {item.Topic} recetesi yazildi.", item.PatientId, item.DoctorUserId);
+        await _store.AddLogAsync(_currentUser, "Reçete Yazildi", $"{_store.PatientName(item.PatientId)} icin {item.Topic} reçetesi yazıldı.", item.PatientId, item.DoctorUserId);
         ShowPrescriptions();
     }
 
@@ -636,7 +636,7 @@ public sealed class MainForm : Form
         }
 
         _store.Snapshot.Radiographs.Add(item);
-        await _store.AddLogAsync(_currentUser, "Rontgen Eklendi", $"{_store.PatientName(item.PatientId)} icin rontgen kaydi eklendi.", item.PatientId, item.DoctorUserId);
+        await _store.AddLogAsync(_currentUser, "Röntgen Eklendi", $"{_store.PatientName(item.PatientId)} icin röntgen kaydı eklendi.", item.PatientId, item.DoctorUserId);
         ShowRadiographs();
     }
 
@@ -657,7 +657,7 @@ public sealed class MainForm : Form
             appointment.ApprovedByUserId = _currentUser.Id;
         }
 
-        await _store.AddLogAsync(_currentUser, "Randevu Durumu", $"{_store.PatientName(appointment.PatientId)} randevusu {StatusText(status)} olarak guncellendi.", appointment.PatientId, appointment.DoctorUserId);
+        await _store.AddLogAsync(_currentUser, "Randevu Durumu", $"{_store.PatientName(appointment.PatientId)} randevusu {StatusText(status)} olarak güncellendi.", appointment.PatientId, appointment.DoctorUserId);
         ShowAppointments();
     }
 
@@ -763,8 +763,8 @@ public sealed class MainForm : Form
         card.Controls.Add(Stack(
             ModernUi.Label(prescription.Topic, ModernUi.HeaderFont),
             ModernUi.Label($"{_store.PatientName(prescription.PatientId)} - {_store.DoctorName(prescription.DoctorUserId)} - {prescription.Date:dd.MM.yyyy}", ModernUi.SmallFont, ModernUi.Muted),
-            InfoBlock("Ilaclar", prescription.Medicines),
-            InfoBlock("Otomatik Kullanim", prescription.UsageInstructions),
+            InfoBlock("İlaçlar", prescription.Medicines),
+            InfoBlock("Otomatik Kullanım", prescription.UsageInstructions),
             InfoBlock("Doktor Notu", prescription.DoctorNote)));
         return card;
     }
@@ -792,7 +792,7 @@ public sealed class MainForm : Form
         card.Controls.Add(Stack(
             Badge(treatment.Completed ? "Tamamlandi" : "Devam Ediyor", treatment.Completed ? ModernUi.Accent : ModernUi.Warning),
             ModernUi.Label(treatment.ProcedureName, ModernUi.HeaderFont),
-            ModernUi.Label($"{_store.PatientName(treatment.PatientId)} - Dis {treatment.ToothNo} - {treatment.Date:dd.MM.yyyy}", ModernUi.SmallFont, ModernUi.Muted),
+            ModernUi.Label($"{_store.PatientName(treatment.PatientId)} - Diş {treatment.ToothNo} - {treatment.Date:dd.MM.yyyy}", ModernUi.SmallFont, ModernUi.Muted),
             ModernUi.Label(treatment.Description, ModernUi.BodyFont, ModernUi.Text)));
         return card;
     }
@@ -827,7 +827,7 @@ public sealed class MainForm : Form
                 {
                     doctor.Active = !doctor.Active;
                     var logAct = doctor.Active ? "Doktor Aktifleştirme" : "Doktor Silme";
-                    var logMsg = doctor.Active ? "hesabi aktifleştirildi." : "hesabi pasifize edildi.";
+                    var logMsg = doctor.Active ? "hesabı aktifleştirildi." : "hesabı pasifize edildi.";
                     await _store.AddLogAsync(_currentUser, logAct, $"{doctor.FullName} {logMsg}", null, doctor.Id);
                     ShowStaff();
                 }

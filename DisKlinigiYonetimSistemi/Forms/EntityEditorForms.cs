@@ -1,4 +1,4 @@
-using DisKlinigiYonetimSistemi.Controls;
+﻿using DisKlinigiYonetimSistemi.Controls;
 using DisKlinigiYonetimSistemi.Data;
 using DisKlinigiYonetimSistemi.Models;
 
@@ -46,15 +46,15 @@ public static class EntityEditorForms
     public static Prescription? Prescription(ClinicDataStore store, Prescription? source, UserAccount currentUser)
     {
         var entity = source is null ? new Prescription { DoctorUserId = currentUser.Id } : Clone(source);
-        using var form = Dialog("Akilli Recete", 700, 720);
+        using var form = Dialog("Akıllı Reçete", 700, 720);
         var patientBox = Combo(Lookup(store.Snapshot.Patients, item => item.FullName, item => item.Id), entity.PatientId);
         var doctorBox = Combo(Lookup(store.Doctors.ToList(), item => item.FullName, item => item.Id), entity.DoctorUserId);
         var date = new DateTimePicker { Format = DateTimePickerFormat.Short, Value = entity.Date, Font = ModernUi.BodyFont };
         var topicBox = Combo(
-            new[] { "Kanal Tedavisi", "Dolgu Sonrasi", "Dis Eti Tedavisi", "Cerrahi Hazirlik", "Ortodontik Hazirlik", "Implant Planlama", "Rutin Kontrol" }
+            new[] { "Kanal Tedavisi", "Dolgu Sonrası", "Diş Eti Tedavisi", "Cerrahi Hazırlık", "Ortodontik Hazırlık", "İmplant Planlama", "Rutin Kontrol" }
                 .Select(topic => new LookupItem(topic, topic)).ToList(),
             entity.Topic);
-        var diagnosis = Text(entity.Diagnosis, "Tani / klinik konu");
+        var diagnosis = Text(entity.Diagnosis, "Tanı / klinik konu");
         var medicines = new CheckedListBox
         {
             CheckOnClick = true,
@@ -93,7 +93,7 @@ public static class EntityEditorForms
             }
         };
         RefreshUsage();
-        AddRows(form, ("Hasta", patientBox), ("Doktor", doctorBox), ("Tarih", date), ("Recete Konusu", topicBox), ("Tani", diagnosis), ("Ilac Secimi", medicines), ("Otomatik Kullanim Talimati", usage), ("Doktor Notu", note));
+        AddRows(form, ("Hasta", patientBox), ("Doktor", doctorBox), ("Tarih", date), ("Reçete Konusu", topicBox), ("Tanı", diagnosis), ("İlaç Seçimi", medicines), ("Otomatik Kullanım Talimati", usage), ("Doktor Notu", note));
         return Show(form, () =>
         {
             var selected = medicines.CheckedItems.Cast<MedicationTemplate>().ToList();
@@ -113,27 +113,27 @@ public static class EntityEditorForms
     public static Radiograph? Radiograph(ClinicDataStore store, Radiograph? source, UserAccount currentUser)
     {
         var entity = source is null ? new Radiograph { DoctorUserId = currentUser.Id } : Clone(source);
-        using var form = Dialog("Dis Rontgeni", 560, 560);
+        using var form = Dialog("Diş Röntgeni", 560, 560);
         var patientBox = Combo(Lookup(store.Snapshot.Patients, item => item.FullName, item => item.Id), entity.PatientId);
         var doctorBox = Combo(Lookup(store.Doctors.ToList(), item => $"{item.FullName} - {item.Specialty}", item => item.Id), entity.DoctorUserId);
         var date = new DateTimePicker { Format = DateTimePickerFormat.Short, Value = entity.Date, Font = ModernUi.BodyFont };
-        var region = Text(entity.ToothRegion, "Dis bolgesi");
-        var imagePath = Text(entity.ImagePath, "Gorsel dosya yolu");
-        var choose = ModernUi.FlatButton("Gorsel Sec", Color.FromArgb(230, 236, 244), ModernUi.Text);
+        var region = Text(entity.ToothRegion, "Diş bölgesi");
+        var imagePath = Text(entity.ImagePath, "Görsel dosya yolu");
+        var choose = ModernUi.FlatButton("Görsel Seç", Color.FromArgb(230, 236, 244), ModernUi.Text);
         choose.Click += (_, _) =>
         {
             using var file = new OpenFileDialog
             {
-                Filter = "Gorsel Dosyalari|*.png;*.jpg;*.jpeg;*.bmp|Tum Dosyalar|*.*",
-                Title = "Rontgen gorseli sec"
+                Filter = "Görsel Dosyaları|*.png;*.jpg;*.jpeg;*.bmp|Tüm Dosyalar|*.*",
+                Title = "Röntgen görseli seç"
             };
             if (file.ShowDialog(form) == DialogResult.OK)
             {
                 imagePath.Text = file.FileName;
             }
         };
-        var notes = Text(entity.Notes, "Rontgen notu", true);
-        AddRows(form, ("Hasta", patientBox), ("Doktor", doctorBox), ("Tarih", date), ("Bolge", region), ("Gorsel", imagePath), ("", choose), ("Not", notes));
+        var notes = Text(entity.Notes, "Röntgen notu", true);
+        AddRows(form, ("Hasta", patientBox), ("Doktor", doctorBox), ("Tarih", date), ("Bölge", region), ("Görsel", imagePath), ("", choose), ("Not", notes));
         return Show(form, () =>
         {
             entity.PatientId = Value(patientBox);
@@ -153,11 +153,11 @@ public static class EntityEditorForms
         var patientBox = Combo(Lookup(store.Snapshot.Patients, item => item.FullName, item => item.Id), entity.PatientId);
         var doctorBox = Combo(Lookup(store.Doctors.ToList(), item => item.FullName, item => item.Id), entity.DoctorUserId);
         var date = new DateTimePicker { Format = DateTimePickerFormat.Short, Value = entity.Date, Font = ModernUi.BodyFont };
-        var toothNo = Text(entity.ToothNo, "Dis no");
-        var procedure = Text(entity.ProcedureName, "Islem");
-        var description = Text(entity.Description, "Aciklama", true);
+        var toothNo = Text(entity.ToothNo, "Diş no");
+        var procedure = Text(entity.ProcedureName, "İşlem");
+        var description = Text(entity.Description, "Açıklama", true);
         var completed = new CheckBox { Text = "Tedavi tamamlandi", Checked = entity.Completed, AutoSize = true, ForeColor = ModernUi.Text };
-        AddRows(form, ("Hasta", patientBox), ("Doktor", doctorBox), ("Tarih", date), ("Dis No", toothNo), ("Islem", procedure), ("Aciklama", description), ("Durum", completed));
+        AddRows(form, ("Hasta", patientBox), ("Doktor", doctorBox), ("Tarih", date), ("Diş No", toothNo), ("İşlem", procedure), ("Açıklama", description), ("Durum", completed));
         return Show(form, () =>
         {
             entity.PatientId = Value(patientBox);
@@ -435,7 +435,7 @@ public static class EntityEditorForms
         layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         
         layout.Controls.Add(Wrap("Ad Soyad", nameBox), 0, 0); layout.Controls.Add(Wrap("Uzmanlik Alani", specBox), 1, 0);
-        layout.Controls.Add(Wrap("E-Posta (Giris ID)", emailBox), 0, 1); layout.Controls.Add(Wrap("Sifre", passBox), 1, 1);
+        layout.Controls.Add(Wrap("E-Posta (Giriş ID)", emailBox), 0, 1); layout.Controls.Add(Wrap("Şifre", passBox), 1, 1);
         layout.Controls.Add(Wrap("Telefon", phoneBox), 0, 2); layout.Controls.Add(Wrap("Oda Ismi", roomBox), 1, 2);
 
         form.Controls.Add(layout);
