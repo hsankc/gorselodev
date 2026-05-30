@@ -178,6 +178,13 @@ public static class EntityEditorForms
             entity.DoctorUserId = Value(doctorBox);
             entity.Date = date.Value.Date;
             entity.ToothRegion = region.Text.Trim();
+            if (!entity.ImagePath.Equals(imagePath.Text.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                entity.ImageFileName = "";
+                entity.ImageMimeType = "";
+                entity.ImageContentBase64 = "";
+            }
+
             entity.ImagePath = imagePath.Text.Trim();
             entity.Notes = notes.Text.Trim();
             return entity;
@@ -396,6 +403,9 @@ public static class EntityEditorForms
         Date = item.Date,
         ToothRegion = item.ToothRegion,
         ImagePath = item.ImagePath,
+        ImageFileName = item.ImageFileName,
+        ImageMimeType = item.ImageMimeType,
+        ImageContentBase64 = item.ImageContentBase64,
         Notes = item.Notes
     };
 

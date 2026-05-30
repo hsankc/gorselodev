@@ -1004,7 +1004,7 @@ public sealed class MainForm : Form
         card.Width = 430;
         card.Height = 380;
         var picture = new PictureBox { Dock = DockStyle.Top, Height = 200, SizeMode = PictureBoxSizeMode.Zoom, BackColor = Color.FromArgb(20, 28, 40) };
-        LoadPicture(picture, radiograph.ImagePath);
+        LoadPicture(picture, radiograph);
         card.Controls.Add(Stack(
             picture,
             ModernUi.Label($"{radiograph.ToothRegion} - {radiograph.Date:dd.MM.yyyy}", ModernUi.HeaderFont),
@@ -1246,8 +1246,25 @@ public sealed class MainForm : Form
         _ => status.ToString()
     };
 
-    private static void LoadPicture(PictureBox picture, string path)
+    private static void LoadPicture(PictureBox picture, Radiograph radiograph)
     {
+        if (!string.IsNullOrWhiteSpace(radiograph.ImageContentBase64))
+        {
+            try
+            {
+                var bytes = Convert.FromBase64String(radiograph.ImageContentBase64);
+                using var memory = new MemoryStream(bytes);
+                using var loaded = Image.FromStream(memory);
+                picture.Image = new Bitmap(loaded);
+                return;
+            }
+            catch
+            {
+                picture.Image = null;
+            }
+        }
+
+        var path = radiograph.ImagePath;
         if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
             picture.Image = null;
@@ -1255,8 +1272,8 @@ public sealed class MainForm : Form
         }
 
         using var stream = File.OpenRead(path);
-        using var loaded = Image.FromStream(stream);
-        picture.Image = new Bitmap(loaded);
+        using var pathImage = Image.FromStream(stream);
+        picture.Image = new Bitmap(pathImage);
     }
 
     private static void Wire(Control control, Action action)

@@ -125,6 +125,9 @@ public sealed class Radiograph
     public DateTime Date { get; set; } = DateTime.Today;
     public string ToothRegion { get; set; } = "";
     public string ImagePath { get; set; } = "";
+    public string ImageFileName { get; set; } = "";
+    public string ImageMimeType { get; set; } = "";
+    public string ImageContentBase64 { get; set; } = "";
     public string Notes { get; set; } = "";
 }
 

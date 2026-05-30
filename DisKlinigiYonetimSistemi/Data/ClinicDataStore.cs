@@ -47,6 +47,11 @@ public sealed class ClinicDataStore
         {
             await TryWarmUpSupabaseAsync();
         }
+
+        if (EmbedRadiographImages())
+        {
+            await SaveAsync();
+        }
     }
 
     private async Task LoadLocalSnapshotAsync()
@@ -101,8 +106,48 @@ public sealed class ClinicDataStore
         !string.IsNullOrWhiteSpace(value) &&
         value.Trim().Equals(login, StringComparison.OrdinalIgnoreCase);
 
+    private bool EmbedRadiographImages()
+    {
+        var changed = false;
+        foreach (var radiograph in Snapshot.Radiographs)
+        {
+            if (!string.IsNullOrWhiteSpace(radiograph.ImageContentBase64) ||
+                string.IsNullOrWhiteSpace(radiograph.ImagePath) ||
+                !File.Exists(radiograph.ImagePath))
+            {
+                continue;
+            }
+
+            try
+            {
+                var bytes = File.ReadAllBytes(radiograph.ImagePath);
+                radiograph.ImageContentBase64 = Convert.ToBase64String(bytes);
+                radiograph.ImageFileName = Path.GetFileName(radiograph.ImagePath);
+                radiograph.ImageMimeType = ImageMimeType(radiograph.ImagePath);
+                changed = true;
+            }
+            catch
+            {
+                // Dosya okunamazsa kayıt yolu korunur; uygulama diğer verileri senkronlamaya devam eder.
+            }
+        }
+
+        return changed;
+    }
+
+    private static string ImageMimeType(string path)
+    {
+        return Path.GetExtension(path).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".bmp" => "image/bmp",
+            _ => "image/png"
+        };
+    }
+
     public async Task SaveAsync()
     {
+        EmbedRadiographImages();
         await SaveLocalAsync();
         await TryPushSupabaseAsync();
     }
