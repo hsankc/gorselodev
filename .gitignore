@@ -13,6 +13,14 @@ obj/
 publish/
 *.nupkg
 
+# Homework delivery package: keep the runnable self-contained Windows build in git.
+!DisKlinigiYonetimSistemi/bin/
+!DisKlinigiYonetimSistemi/bin/Release/
+!DisKlinigiYonetimSistemi/bin/Release/net9.0-windows/
+!DisKlinigiYonetimSistemi/bin/Release/net9.0-windows/win-x64/
+!DisKlinigiYonetimSistemi/bin/Release/net9.0-windows/win-x64/publish/
+!DisKlinigiYonetimSistemi/bin/Release/net9.0-windows/win-x64/publish/**
+
 # Local runtime data
 **/App_Data/clinic-data.json
 **/App_Data/supabase-settings.json
