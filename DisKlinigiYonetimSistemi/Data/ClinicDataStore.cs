@@ -78,7 +78,9 @@ public sealed class ClinicDataStore
 
     private bool MatchesLogin(UserAccount user, string login)
     {
-        if (user.UserName.Equals(login, StringComparison.OrdinalIgnoreCase))
+        if (TextMatches(user.UserName, login) ||
+            TextMatches(user.Email, login) ||
+            TextMatches(user.FullName, login))
         {
             return true;
         }
@@ -92,15 +94,23 @@ public sealed class ClinicDataStore
         return patient is not null && patient.TcNo.Equals(login, StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool TextMatches(string value, string login) =>
+        !string.IsNullOrWhiteSpace(value) &&
+        value.Trim().Equals(login, StringComparison.OrdinalIgnoreCase);
+
     public async Task SaveAsync()
     {
         await SaveLocalAsync();
         await TryPushSupabaseAsync();
     }
 
-    private async Task SaveLocalAsync()
+    private async Task SaveLocalAsync(bool touchUpdatedAt = true)
     {
-        Snapshot.UpdatedAt = DateTime.Now;
+        if (touchUpdatedAt)
+        {
+            Snapshot.UpdatedAt = DateTime.Now;
+        }
+
         await using var stream = File.Create(_dataPath);
         await JsonSerializer.SerializeAsync(stream, Snapshot, JsonOptions);
     }
@@ -205,7 +215,7 @@ public sealed class ClinicDataStore
         }
 
         Snapshot = remote!;
-        await SaveLocalAsync();
+        await SaveLocalAsync(touchUpdatedAt: false);
         LastSyncError = null;
         return Snapshot;
     }
@@ -229,7 +239,7 @@ public sealed class ClinicDataStore
             if (IsUsableSnapshot(remote))
             {
                 Snapshot = remote!;
-                await SaveLocalAsync();
+                await SaveLocalAsync(touchUpdatedAt: false);
             }
             else
             {
@@ -307,6 +317,16 @@ public sealed class ClinicDataStore
             Biography = "Klinik operasyonlarını ve yetkilendirmeleri yönetir."
         };
 
+        var hasanAdmin = new UserAccount
+        {
+            Id = "admin-hasan",
+            UserName = "hasanadmin",
+            Password = "hasan2004",
+            FullName = "hasanadmin",
+            Role = UserRole.Admin,
+            Biography = "Proje sahibi admin hesabı."
+        };
+
         var doctors = new List<UserAccount>
         {
             Doctor("doctor-elif", "doktor", "Dr. Elif Demir", "Endodonti", "Kanal tedavisi ve ağrı yönetimi", "A-101", "elif.demir@ccetyteeth.com", "0532 100 10 10"),
@@ -355,7 +375,7 @@ public sealed class ClinicDataStore
         var snapshot = new DataSnapshot
         {
             SeedVersion = 7,
-            Users = [admin, ..doctors, ..secretaries, ..patientUsers],
+            Users = [admin, hasanAdmin, ..doctors, ..secretaries, ..patientUsers],
             Patients = patients,
             Medications = medications,
             Appointments =

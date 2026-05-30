@@ -10,7 +10,14 @@ public static class EntityEditorForms
     {
         var entity = source is null ? new Appointment { RequestedByUserId = currentUser.Id } : Clone(source);
         using var form = Dialog("Randevu Bilgisi", 560, 560);
-        var patient = Lookup(store.Snapshot.Patients, item => item.FullName, item => item.Id);
+        var currentPatient = currentUser.Role == UserRole.Hasta ? ResolvePatientForUser(store, currentUser) : null;
+        if (currentPatient is not null)
+        {
+            entity.PatientId = currentPatient.Id;
+        }
+
+        IEnumerable<Patient> patientSource = currentPatient is null ? store.Snapshot.Patients : new[] { currentPatient };
+        var patient = Lookup(patientSource, item => item.FullName, item => item.Id);
         var doctor = Lookup(store.Doctors.ToList(), item => item.FullName, item => item.Id);
         var patientBox = Combo(patient, entity.PatientId);
         var doctorBox = Combo(doctor, entity.DoctorUserId);
@@ -20,9 +27,9 @@ public static class EntityEditorForms
         var complaint = Text(entity.Complaint, "Sikayet");
         var notes = Text(entity.Notes, "Notlar", true);
 
-        if (currentUser.Role == UserRole.Hasta && currentUser.LinkedPatientId is not null)
+        if (currentUser.Role == UserRole.Hasta && currentPatient is not null)
         {
-            patientBox.SelectedValue = currentUser.LinkedPatientId;
+            patientBox.SelectedValue = currentPatient.Id;
             patientBox.Enabled = false;
             status.SelectedValue = AppointmentStatus.TalepEdildi.ToString();
             status.Enabled = false;
@@ -31,7 +38,7 @@ public static class EntityEditorForms
         AddRows(form, ("Hasta", patientBox), ("Doktor", doctorBox), ("Tarih/Saat", date), ("Sure (dk)", duration), ("Durum", status), ("Sikayet", complaint), ("Not", notes));
         return Show(form, () =>
         {
-            entity.PatientId = Value(patientBox);
+            entity.PatientId = currentPatient?.Id ?? Value(patientBox);
             entity.DoctorUserId = Value(doctorBox);
             entity.RequestedByUserId = string.IsNullOrWhiteSpace(entity.RequestedByUserId) ? currentUser.Id : entity.RequestedByUserId;
             entity.StartsAt = date.Value;
@@ -41,6 +48,37 @@ public static class EntityEditorForms
             entity.Notes = notes.Text.Trim();
             return entity;
         });
+    }
+
+    private static Patient? ResolvePatientForUser(ClinicDataStore store, UserAccount user)
+    {
+        var patient = !string.IsNullOrWhiteSpace(user.LinkedPatientId)
+            ? store.Snapshot.Patients.FirstOrDefault(item => item.Id == user.LinkedPatientId)
+            : null;
+
+        patient ??= store.Snapshot.Patients.FirstOrDefault(item =>
+            !string.IsNullOrWhiteSpace(user.UserName) &&
+            item.TcNo.Equals(user.UserName, StringComparison.OrdinalIgnoreCase));
+
+        patient ??= store.Snapshot.Patients.FirstOrDefault(item =>
+            !string.IsNullOrWhiteSpace(user.Email) &&
+            item.Email.Equals(user.Email, StringComparison.OrdinalIgnoreCase));
+
+        patient ??= store.Snapshot.Patients.FirstOrDefault(item =>
+            !string.IsNullOrWhiteSpace(user.FullName) &&
+            item.FullName.Equals(user.FullName, StringComparison.OrdinalIgnoreCase));
+
+        if (patient is not null)
+        {
+            user.LinkedPatientId = patient.Id;
+            var storedUser = store.Snapshot.Users.FirstOrDefault(item => item.Id == user.Id);
+            if (storedUser is not null)
+            {
+                storedUser.LinkedPatientId = patient.Id;
+            }
+        }
+
+        return patient;
     }
 
     public static Prescription? Prescription(ClinicDataStore store, Prescription? source, UserAccount currentUser)
@@ -449,6 +487,7 @@ public static class EntityEditorForms
             entity.FullName = nameBox.Text;
             entity.Specialty = specBox.Text;
             entity.Email = emailBox.Text;
+            entity.UserName = emailBox.Text.Trim();
             entity.Password = passBox.Text;
             entity.Phone = phoneBox.Text;
             entity.RoomName = roomBox.Text;

@@ -1,23 +1,21 @@
-﻿using DisKlinigiYonetimSistemi.Controls;
+using DisKlinigiYonetimSistemi.Controls;
 using DisKlinigiYonetimSistemi.Data;
-using DisKlinigiYonetimSistemi.Models;
 
 namespace DisKlinigiYonetimSistemi.Forms;
 
 public sealed class SupabaseSettingsForm : Form
 {
     private readonly ClinicDataStore _store;
-    private readonly TextBox _urlBox = ModernUi.TextBox("https://proje-ref.supabase.co");
-    private readonly TextBox _apiKeyBox = ModernUi.TextBox("anon veya service role key", true);
-    private readonly Label _statusLabel = ModernUi.Label("", ModernUi.SmallFont, ModernUi.Muted);
-    private readonly List<Button> _buttons = [];
+    private readonly TextBox _urlBox = ModernUi.TextBox("Supabase URL");
+    private readonly TextBox _apiKeyBox = ModernUi.TextBox("Anon key", true);
+    private readonly Label _statusLabel = ModernUi.Label("", ModernUi.BodyFont, ModernUi.Muted);
 
     public SupabaseSettingsForm(ClinicDataStore store)
     {
         _store = store;
-        Text = "Supabase Ayarları";
-        Size = new Size(680, 640);
-        MinimumSize = new Size(620, 640);
+        Text = "Supabase Durumu";
+        Size = new Size(620, 430);
+        MinimumSize = new Size(560, 400);
         StartPosition = FormStartPosition.CenterParent;
         Font = ModernUi.BodyFont;
         BackColor = ModernUi.Background;
@@ -27,54 +25,44 @@ public sealed class SupabaseSettingsForm : Form
 
     private void BuildUi()
     {
+        _urlBox.ReadOnly = true;
+        _apiKeyBox.ReadOnly = true;
+
         var root = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 8,
+            RowCount = 6,
             Padding = new Padding(26),
             BackColor = ModernUi.Background
         };
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 65));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 85));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 85));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 65));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 65));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 66));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 78));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 78));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 74));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
         Controls.Add(root);
 
-        root.Controls.Add(ModernUi.Label("Supabase Bağlantısı", ModernUi.TitleFont), 0, 0);
+        root.Controls.Add(ModernUi.Label("Supabase Durumu", ModernUi.TitleFont), 0, 0);
         root.Controls.Add(Field("Project URL", _urlBox), 0, 1);
-        root.Controls.Add(Field("API Key", _apiKeyBox), 0, 2);
-
-        var keyHint = ModernUi.Label("Okul/demo için anon key yeterli olur. Herkese dağıtılacak gerçek uygulamada service role key kullanma.", ModernUi.SmallFont, ModernUi.Muted);
-        keyHint.Dock = DockStyle.Fill;
-        keyHint.MaximumSize = new Size(590, 0);
-        root.Controls.Add(keyHint, 0, 3);
-
-        root.Controls.Add(ButtonRow(
-            ActionButton("Kaydet", ModernUi.Primary, SaveSettingsAsync),
-            ActionButton("Bağlantıyı Test Et", ModernUi.Accent, TestConnectionAsync)), 0, 4);
-
-        root.Controls.Add(ButtonRow(
-            ActionButton("Buluta Gönder", ModernUi.Primary, PushLocalAsync),
-            ActionButton("Buluttan Çek", Color.FromArgb(93, 101, 214), PullRemoteAsync)), 0, 5);
+        root.Controls.Add(Field("Anon Key", _apiKeyBox), 0, 2);
 
         _statusLabel.Dock = DockStyle.Fill;
         _statusLabel.AutoSize = false;
         _statusLabel.TextAlign = ContentAlignment.MiddleLeft;
-        root.Controls.Add(_statusLabel, 0, 6);
+        root.Controls.Add(_statusLabel, 0, 3);
 
-        var closeButton = ActionButton("Kapat", Color.FromArgb(105, 116, 133), () =>
+        var closeButton = ModernUi.FlatButton("Kapat", Color.FromArgb(105, 116, 133), Color.White);
+        closeButton.Width = 120;
+        closeButton.Height = 42;
+        closeButton.Click += (_, _) =>
         {
             DialogResult = DialogResult.OK;
             Close();
-            return Task.CompletedTask;
-        });
-        closeButton.Width = 120;
+        };
+
         var closeRow = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -82,7 +70,7 @@ public sealed class SupabaseSettingsForm : Form
             BackColor = ModernUi.Background
         };
         closeRow.Controls.Add(closeButton);
-        root.Controls.Add(closeRow, 0, 7);
+        root.Controls.Add(closeRow, 0, 5);
     }
 
     private async Task LoadSettingsAsync()
@@ -91,54 +79,16 @@ public sealed class SupabaseSettingsForm : Form
         _urlBox.Text = settings.Url;
         _apiKeyBox.Text = settings.ApiKey;
 
-        if (_store.SupabaseEnabled)
+        if (!_store.SupabaseEnabled)
         {
-            SetStatus(_store.LastSyncError is null ? "Supabase aktif." : $"Son senkron hatasi: {_store.LastSyncError}", _store.LastSyncError is null ? ModernUi.Accent : ModernUi.Warning);
-        }
-        else
-        {
-            SetStatus("Supabase kapali. URL ve API key girip kaydet.", ModernUi.Muted);
-        }
-    }
-
-    private async Task SaveSettingsAsync()
-    {
-        await _store.SaveSupabaseSettingsAsync(ReadSettings());
-        SetStatus(_store.SupabaseEnabled ? "Ayarlar kaydedildi." : "Ayarlar temizlendi, Supabase kapali.", ModernUi.Accent);
-    }
-
-    private async Task TestConnectionAsync()
-    {
-        var settings = ReadSettings();
-        var client = new SupabaseClinicClient(settings);
-        var ok = await client.TestConnectionAsync();
-        if (ok)
-        {
-            await _store.SaveSupabaseSettingsAsync(settings);
+            SetStatus("Supabase bağlantısı kapalı.", ModernUi.Warning);
+            return;
         }
 
-        SetStatus(ok ? "Bağlantı başarılı. Ayarlar kaydedildi." : "Bağlantı başarısız. URL/key veya tablo politikasını kontrol et.", ok ? ModernUi.Accent : ModernUi.Danger);
+        SetStatus(_store.LastSyncError is null
+            ? "Supabase bağlı. Otomatik senkronizasyon aktif."
+            : $"Supabase bağlı, son senkron hatası: {_store.LastSyncError}", _store.LastSyncError is null ? ModernUi.Accent : ModernUi.Warning);
     }
-
-    private async Task PushLocalAsync()
-    {
-        await _store.SaveSupabaseSettingsAsync(ReadSettings());
-        await _store.PushToSupabaseAsync();
-        SetStatus("Lokal klinik verisi Supabase'e gonderildi.", ModernUi.Accent);
-    }
-
-    private async Task PullRemoteAsync()
-    {
-        await _store.SaveSupabaseSettingsAsync(ReadSettings());
-        var snapshot = await _store.PullFromSupabaseAsync();
-        SetStatus(snapshot is null ? _store.LastSyncError ?? "Supabase'den veri cekilemedi." : "Supabase verisi indirildi ve lokal cache güncellendi.", snapshot is null ? ModernUi.Warning : ModernUi.Accent);
-    }
-
-    private SupabaseSettings ReadSettings() => new()
-    {
-        Url = _urlBox.Text,
-        ApiKey = _apiKeyBox.Text
-    };
 
     private Control Field(string labelText, TextBox textBox)
     {
@@ -159,64 +109,6 @@ public sealed class SupabaseSettingsForm : Form
         textBox.Margin = new Padding(0);
         panel.Controls.Add(textBox, 0, 1);
         return panel;
-    }
-
-    private Control ButtonRow(params Button[] buttons)
-    {
-        var row = new FlowLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.LeftToRight,
-            WrapContents = false,
-            BackColor = ModernUi.Background,
-            Padding = new Padding(0, 8, 0, 0)
-        };
-
-        foreach (var button in buttons)
-        {
-            row.Controls.Add(button);
-        }
-
-        return row;
-    }
-
-    private Button ActionButton(string text, Color color, Func<Task> action)
-    {
-        var button = ModernUi.FlatButton(text, color, Color.White);
-        button.Width = 180;
-        button.Height = 42;
-        button.Margin = new Padding(0, 0, 12, 0);
-        button.Click += async (_, _) => await RunSafelyAsync(action);
-        _buttons.Add(button);
-        return button;
-    }
-
-    private async Task RunSafelyAsync(Func<Task> action)
-    {
-        try
-        {
-            SetBusy(true);
-            SetStatus("İşlem yapiliyor...", ModernUi.Muted);
-            await action();
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"Hata: {ex.Message}", ModernUi.Danger);
-        }
-        finally
-        {
-            SetBusy(false);
-        }
-    }
-
-    private void SetBusy(bool busy)
-    {
-        foreach (var button in _buttons)
-        {
-            button.Enabled = !busy;
-        }
-
-        Cursor = busy ? Cursors.WaitCursor : Cursors.Default;
     }
 
     private void SetStatus(string text, Color color)

@@ -9,6 +9,9 @@ public sealed class MainForm : Form
     private readonly ClinicDataStore _store;
     private readonly UserAccount _currentUser;
     private readonly Panel _content = new() { Dock = DockStyle.Fill, BackColor = ModernUi.Background };
+    private readonly System.Windows.Forms.Timer _syncTimer = new() { Interval = 15000 };
+    private Action? _currentPage;
+    private bool _syncInProgress;
 
     public MainForm(ClinicDataStore store, UserAccount currentUser)
     {
@@ -28,7 +31,8 @@ public sealed class MainForm : Form
         
         Font = ModernUi.BodyFont;
         BuildShell();
-        ShowDashboard();
+        Navigate(ShowDashboard);
+        StartAutoSync();
         this.EnableDoubleBuffering();
     }
 
@@ -38,6 +42,71 @@ public sealed class MainForm : Form
     private bool IsAdmin => _currentUser.Role == UserRole.Admin;
     private bool CanClinical => IsAdmin || IsDoctor;
     private bool CanOffice => IsAdmin || IsSecretary;
+
+    private void Navigate(Action action, bool remember = true)
+    {
+        if (remember)
+        {
+            _currentPage = action;
+        }
+
+        _content.SuspendDrawing();
+        action();
+        if (_content.Controls.Count > 0)
+        {
+            _content.Controls[0].EnableDoubleBuffering();
+        }
+
+        _content.ResumeDrawing();
+    }
+
+    private void StartAutoSync()
+    {
+        _syncTimer.Tick += async (_, _) => await PullCloudChangesAsync();
+        _syncTimer.Start();
+        FormClosed += (_, _) => _syncTimer.Stop();
+    }
+
+    private async Task PullCloudChangesAsync()
+    {
+        if (_syncInProgress || !_store.SupabaseEnabled || HasOpenModalDialog())
+        {
+            return;
+        }
+
+        _syncInProgress = true;
+        try
+        {
+            var previousUpdate = _store.Snapshot.UpdatedAt;
+            var snapshot = await _store.PullFromSupabaseAsync();
+            var refresh = _currentPage;
+            if (snapshot is not null && snapshot.UpdatedAt != previousUpdate && refresh is not null)
+            {
+                Navigate(refresh, remember: false);
+            }
+        }
+        catch
+        {
+            // Offline kalırsa uygulama yerel cache ile çalışmaya devam eder.
+        }
+        finally
+        {
+            _syncInProgress = false;
+        }
+    }
+
+    private bool HasOpenModalDialog()
+    {
+        foreach (Form form in Application.OpenForms)
+        {
+            if (form != this && form.Modal)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private void BuildShell()
     {
@@ -89,7 +158,7 @@ public sealed class MainForm : Form
         AddNav(nav, IsPatient ? "Tedavilerim" : "Tedavi Süreci", ShowTreatments);
         if (!IsPatient) AddNav(nav, "Ekip Profilleri", ShowStaff);
         if (IsAdmin) AddNav(nav, "Sistem Logları", ShowLogs);
-        if (IsAdmin) AddNav(nav, "Supabase Ayarları", ShowSupabaseSettings);
+        if (IsAdmin) AddNav(nav, "Supabase Durumu", ShowSupabaseSettings, rememberPage: false);
         AddNav(nav, "Çıkış Yap", Close);
     }
 
@@ -101,7 +170,7 @@ public sealed class MainForm : Form
         _ => "Hasta portalı"
     };
 
-    private void AddNav(FlowLayoutPanel nav, string text, Action action)
+    private void AddNav(FlowLayoutPanel nav, string text, Action action, bool rememberPage = true)
     {
         var button = new Button
         {
@@ -123,11 +192,14 @@ public sealed class MainForm : Form
         {
             if (text != "Çıkış Yap")
             {
-                _content.SuspendDrawing();
-                action();
-                if (_content.Controls.Count > 0)
-                    _content.Controls[0].EnableDoubleBuffering();
-                _content.ResumeDrawing();
+                if (rememberPage)
+                {
+                    Navigate(action);
+                }
+                else
+                {
+                    action();
+                }
             }
             else
             {
@@ -560,9 +632,10 @@ public sealed class MainForm : Form
 
     private IEnumerable<Patient> VisiblePatients()
     {
-        if (IsPatient && _currentUser.LinkedPatientId is not null)
+        if (IsPatient)
         {
-            return _store.Snapshot.Patients.Where(p => p.Id == _currentUser.LinkedPatientId);
+            var patient = CurrentPatient();
+            return patient is null ? Enumerable.Empty<Patient>() : new[] { patient };
         }
 
         if (IsDoctor)
@@ -580,6 +653,42 @@ public sealed class MainForm : Form
         return _store.Snapshot.Patients;
     }
 
+    private Patient? CurrentPatient()
+    {
+        if (!IsPatient)
+        {
+            return null;
+        }
+
+        var patient = !string.IsNullOrWhiteSpace(_currentUser.LinkedPatientId)
+            ? _store.Snapshot.Patients.FirstOrDefault(item => item.Id == _currentUser.LinkedPatientId)
+            : null;
+
+        patient ??= _store.Snapshot.Patients.FirstOrDefault(item =>
+            !string.IsNullOrWhiteSpace(_currentUser.UserName) &&
+            item.TcNo.Equals(_currentUser.UserName, StringComparison.OrdinalIgnoreCase));
+
+        patient ??= _store.Snapshot.Patients.FirstOrDefault(item =>
+            !string.IsNullOrWhiteSpace(_currentUser.Email) &&
+            item.Email.Equals(_currentUser.Email, StringComparison.OrdinalIgnoreCase));
+
+        patient ??= _store.Snapshot.Patients.FirstOrDefault(item =>
+            !string.IsNullOrWhiteSpace(_currentUser.FullName) &&
+            item.FullName.Equals(_currentUser.FullName, StringComparison.OrdinalIgnoreCase));
+
+        if (patient is not null)
+        {
+            _currentUser.LinkedPatientId = patient.Id;
+            var storedUser = _store.Snapshot.Users.FirstOrDefault(user => user.Id == _currentUser.Id);
+            if (storedUser is not null)
+            {
+                storedUser.LinkedPatientId = patient.Id;
+            }
+        }
+
+        return patient;
+    }
+
     private HashSet<string> ClinicalPatientIds(string doctorId) =>
         _store.Snapshot.Appointments.Where(a => a.DoctorUserId == doctorId).Select(a => a.PatientId)
             .Concat(_store.Snapshot.Prescriptions.Where(p => p.DoctorUserId == doctorId).Select(p => p.PatientId))
@@ -589,7 +698,11 @@ public sealed class MainForm : Form
 
     private IEnumerable<Appointment> VisibleAppointments()
     {
-        if (IsPatient && _currentUser.LinkedPatientId is not null) return _store.Snapshot.Appointments.Where(a => a.PatientId == _currentUser.LinkedPatientId);
+        if (IsPatient)
+        {
+            var patient = CurrentPatient();
+            return patient is null ? Enumerable.Empty<Appointment>() : _store.Snapshot.Appointments.Where(a => a.PatientId == patient.Id);
+        }
         if (IsDoctor) return _store.Snapshot.Appointments.Where(a => a.DoctorUserId == _currentUser.Id);
         if (IsSecretary && _currentUser.AssignedDoctorUserId is not null) return _store.Snapshot.Appointments.Where(a => a.DoctorUserId == _currentUser.AssignedDoctorUserId);
         return _store.Snapshot.Appointments;
@@ -597,13 +710,14 @@ public sealed class MainForm : Form
 
     private IEnumerable<NotificationMessage> VisibleNotifications()
     {
-        if (!IsPatient || _currentUser.LinkedPatientId is null)
+        var patient = CurrentPatient();
+        if (patient is null)
         {
-            return [];
+            return Enumerable.Empty<NotificationMessage>();
         }
 
         return _store.Snapshot.Notifications
-            .Where(notification => notification.PatientId == _currentUser.LinkedPatientId)
+            .Where(notification => notification.PatientId == patient.Id)
             .OrderByDescending(notification => notification.CreatedAt);
     }
 
@@ -613,7 +727,11 @@ public sealed class MainForm : Form
 
     private IEnumerable<T> FilterClinical<T>(IEnumerable<T> source, Func<T, string> patientId, Func<T, string> doctorId)
     {
-        if (IsPatient && _currentUser.LinkedPatientId is not null) return source.Where(item => patientId(item) == _currentUser.LinkedPatientId);
+        if (IsPatient)
+        {
+            var patient = CurrentPatient();
+            return patient is null ? Enumerable.Empty<T>() : source.Where(item => patientId(item) == patient.Id);
+        }
         if (IsDoctor) return source.Where(item => doctorId(item) == _currentUser.Id);
         if (IsSecretary && _currentUser.AssignedDoctorUserId is not null) return source.Where(item => doctorId(item) == _currentUser.AssignedDoctorUserId);
         return source;
@@ -622,14 +740,24 @@ public sealed class MainForm : Form
     private IEnumerable<SystemLog> VisibleLogs()
     {
         if (IsAdmin) return _store.Snapshot.Logs.OrderByDescending(l => l.Timestamp);
-        if (IsPatient && _currentUser.LinkedPatientId is not null) return _store.Snapshot.Logs.Where(l => l.PatientId == _currentUser.LinkedPatientId).OrderByDescending(l => l.Timestamp);
+        if (IsPatient)
+        {
+            var patient = CurrentPatient();
+            return patient is null ? Enumerable.Empty<SystemLog>() : _store.Snapshot.Logs.Where(l => l.PatientId == patient.Id).OrderByDescending(l => l.Timestamp);
+        }
         if (IsDoctor) return _store.Snapshot.Logs.Where(l => l.DoctorUserId == _currentUser.Id || l.ActorUserId == _currentUser.Id).OrderByDescending(l => l.Timestamp);
         if (IsSecretary && _currentUser.AssignedDoctorUserId is not null) return _store.Snapshot.Logs.Where(l => l.DoctorUserId == _currentUser.AssignedDoctorUserId || l.ActorUserId == _currentUser.Id).OrderByDescending(l => l.Timestamp);
-        return [];
+        return Enumerable.Empty<SystemLog>();
     }
 
     private async void AddAppointment()
     {
+        if (IsPatient && CurrentPatient() is null)
+        {
+            MessageBox.Show("Hasta hesabınız bir hasta dosyasıyla eşleşmiyor. Lütfen klinik dosyanızı kontrol edin.", "Hasta Eşleşmesi Bulunamadı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return;
+        }
+
         var item = EntityEditorForms.Appointment(_store, null, _currentUser);
         if (item is null) return;
         if (HasAppointmentConflict(item))
@@ -640,6 +768,14 @@ public sealed class MainForm : Form
 
         if (IsPatient)
         {
+            var patient = CurrentPatient();
+            if (patient is null)
+            {
+                MessageBox.Show("Hasta hesabınız bir hasta dosyasıyla eşleşmiyor. Lütfen klinik dosyanızı kontrol edin.", "Hasta Eşleşmesi Bulunamadı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            item.PatientId = patient.Id;
             item.Status = AppointmentStatus.TalepEdildi;
             item.RequestedByUserId = _currentUser.Id;
             item.ApprovedByUserId = null;
