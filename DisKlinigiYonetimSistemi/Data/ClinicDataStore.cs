@@ -5,6 +5,9 @@ namespace DisKlinigiYonetimSistemi.Data;
 
 public sealed class ClinicDataStore
 {
+    private const string DefaultSupabaseUrl = "https://izoilpvytfpawlqzqfgv.supabase.co";
+    private const string DefaultSupabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6b2lscHZ5dGZwYXdscXpxZmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MzA5NDMsImV4cCI6MjA5NTMwNjk0M30.0ihaxxhdSwu15PPoo1A7YaqifcAsdQywhKdIhJDkiGI";
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -159,11 +162,13 @@ public sealed class ClinicDataStore
     {
         if (!File.Exists(_settingsPath))
         {
-            return new SupabaseSettings();
+            return DefaultSupabaseSettings();
         }
 
         await using var stream = File.OpenRead(_settingsPath);
-        return await JsonSerializer.DeserializeAsync<SupabaseSettings>(stream, JsonOptions) ?? new SupabaseSettings();
+        var settings = await JsonSerializer.DeserializeAsync<SupabaseSettings>(stream, JsonOptions);
+        var normalized = NormalizeSettings(settings ?? new SupabaseSettings());
+        return normalized.Enabled ? normalized : DefaultSupabaseSettings();
     }
 
     public async Task SaveSupabaseSettingsAsync(SupabaseSettings settings)
@@ -277,8 +282,14 @@ public sealed class ClinicDataStore
 
     private static SupabaseSettings NormalizeSettings(SupabaseSettings settings) => new()
     {
-        Url = settings.Url.Trim(),
-        ApiKey = settings.ApiKey.Trim()
+        Url = settings.Url?.Trim() ?? "",
+        ApiKey = settings.ApiKey?.Trim() ?? ""
+    };
+
+    private static SupabaseSettings DefaultSupabaseSettings() => new()
+    {
+        Url = DefaultSupabaseUrl,
+        ApiKey = DefaultSupabaseAnonKey
     };
 
     private static bool IsUsableSnapshot(DataSnapshot? snapshot) =>
